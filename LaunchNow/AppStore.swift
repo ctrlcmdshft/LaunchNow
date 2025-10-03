@@ -967,11 +967,9 @@ final class AppStore: ObservableObject {
         // 顶层将该 app 槽位置为 empty（保持页独立）
         // 替换 items 中所有与该 app 匹配的条目为 empty，避免残留重复
         var newItems = items
-        var replacedAtLeastOnce = false
         for i in newItems.indices {
             if case .app(let a) = newItems[i], a == app {
                 newItems[i] = .empty(UUID().uuidString)
-                replacedAtLeastOnce = true
             }
         }
         items = newItems

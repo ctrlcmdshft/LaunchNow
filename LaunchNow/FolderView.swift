@@ -79,7 +79,7 @@ struct FolderView: View {
                 isKeyboardNavigationActive = false
             }
         }
-        .onChange(of: isTextFieldFocused) { focused in
+        .onChange(of: isTextFieldFocused) { _, focused in
             if !focused && isEditingName {
                 finishEditing()
             }

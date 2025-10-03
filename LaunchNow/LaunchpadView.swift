@@ -1564,14 +1564,12 @@ extension LaunchpadView {
             }
         } else {
             // 兜底逻辑：如果没有有效的目标索引，将应用放置到当前页的末尾
-            if let draggingIndex = filteredItems.firstIndex(of: dragging) {
-                let currentPageStart = appStore.currentPage * config.itemsPerPage
-                let currentPageEnd = min(currentPageStart + config.itemsPerPage, appStore.items.count)
-                let targetIndex = currentPageEnd
-                
-                // 使用级联插入确保应用能正确放置
-                appStore.moveItemAcrossPagesWithCascade(item: dragging, to: targetIndex)
-            }
+            let currentPageStart = appStore.currentPage * config.itemsPerPage
+            let currentPageEnd = min(currentPageStart + config.itemsPerPage, appStore.items.count)
+            let targetIndex = currentPageEnd
+            
+            // 使用级联插入确保应用能正确放置
+            appStore.moveItemAcrossPagesWithCascade(item: dragging, to: targetIndex)
         }
     }
 
