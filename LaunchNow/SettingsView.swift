@@ -159,6 +159,15 @@ struct SettingsView: View {
     func getVersion() -> String {
             return Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "未知"
     }
+    
+    private func showErrorAlert(title: String, message: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
 
     // MARK: - Export / Import Application Support Data
     private func supportDirectoryURL() throws -> URL {
@@ -189,7 +198,9 @@ struct SettingsView: View {
                 try copyDirectory(from: sourceDir, to: destDir)
             }
         } catch {
-            // 忽略错误或可在此添加用户提示
+            LaunchNowLogger.log(.error, category: .general, message: "Failed to export data folder: \(error.localizedDescription)")
+            // Show user-friendly error alert
+            showErrorAlert(title: "Export Failed", message: "Unable to export LaunchNow data: \(error.localizedDescription)")
         }
     }
 

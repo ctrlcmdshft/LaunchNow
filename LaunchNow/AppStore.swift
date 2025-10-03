@@ -17,13 +17,11 @@ final class AppStore: ObservableObject {
         didSet {
             UserDefaults.standard.set(isFullscreenMode, forKey: "isFullscreenMode")
             DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
                 if let appDelegate = AppDelegate.shared {
-                    appDelegate.updateWindowMode(isFullscreen: self?.isFullscreenMode ?? false)
+                    appDelegate.updateWindowMode(isFullscreen: self.isFullscreenMode)
                 }
-            }
-            
-            DispatchQueue.main.async { [weak self] in
-                self?.triggerGridRefresh()
+                self.triggerGridRefresh()
             }
         }
     }
@@ -37,8 +35,11 @@ final class AppStore: ObservableObject {
     @Published var showAppNameBelowIcon: Bool = true {
         didSet {
             UserDefaults.standard.set(showAppNameBelowIcon, forKey: "showAppNameBelowIcon")
-            DispatchQueue.main.async { [weak self] in
-                self?.triggerGridRefresh()
+            // Only trigger refresh if actually changed
+            if oldValue != showAppNameBelowIcon {
+                DispatchQueue.main.async { [weak self] in
+                    self?.triggerGridRefresh()
+                }
             }
         }
     }

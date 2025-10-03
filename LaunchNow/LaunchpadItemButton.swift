@@ -17,7 +17,7 @@ struct LaunchpadItemButton: View {
     @State private var isHovered = false
     @State private var lastTapTime = Date.distantPast
     @State private var forceRefreshTrigger: UUID = UUID()
-    private let doubleTapThreshold: TimeInterval = 0.3
+    private let doubleTapThreshold: TimeInterval = LaunchNowConstants.Animation.doubleTapThreshold
     
     private var effectiveScale: CGFloat {
         if let s = externalScale { return s }

@@ -15,16 +15,28 @@ struct FolderInfo: Identifiable, Equatable {
         self.createdAt = createdAt
     }
     
+    private var iconCache: [CGFloat: NSImage] = [:]
+    
     var folderIcon: NSImage { 
-        // 每次访问都重新生成图标，确保反映最新的应用状态
-        let icon = icon(of: 72)
-        return icon
+        return icon(of: 72)
     }
 
     func icon(of side: CGFloat) -> NSImage {
         let normalizedSide = max(16, side)
+        
+        // Check cache first
+        if let cachedIcon = iconCache[normalizedSide] {
+            return cachedIcon
+        }
+        
         let icon = renderFolderIcon(side: normalizedSide)
+        iconCache[normalizedSide] = icon
         return icon
+    }
+    
+    /// Clears the icon cache when folder contents change
+    mutating func clearIconCache() {
+        iconCache.removeAll()
     }
 
     private func renderFolderIcon(side: CGFloat) -> NSImage {

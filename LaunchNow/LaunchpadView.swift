@@ -1753,24 +1753,24 @@ struct GridConfig {
         self.isFullscreen = isFullscreen
     }
     
-    var itemsPerPage: Int { 35 }
-    var columns: Int { 7 }
-    var rows: Int { 5 }
+    var itemsPerPage: Int { LaunchNowConstants.Layout.itemsPerPage }
+    var columns: Int { LaunchNowConstants.Layout.columns }
+    var rows: Int { LaunchNowConstants.Layout.rows }
     
-    let maxBounce: CGFloat = 80
-    let pageSpacing: CGFloat = 100
-    let rowSpacing: CGFloat = 16
-    let columnSpacing: CGFloat = 24
+    let maxBounce: CGFloat = LaunchNowConstants.Layout.maxBounce
+    let pageSpacing: CGFloat = LaunchNowConstants.Layout.pageSpacing
+    let rowSpacing: CGFloat = LaunchNowConstants.Layout.rowSpacing
+    let columnSpacing: CGFloat = LaunchNowConstants.Layout.columnSpacing
     
     struct PageNavigation {
         let edgeFlipMargin: CGFloat = 15
-        let autoFlipInterval: TimeInterval = 0.8 // 拖拽贴边翻页两次之间间隔0.8秒
+        let autoFlipInterval: TimeInterval = LaunchNowConstants.Animation.autoFlipInterval
         let scrollPageThreshold: CGFloat = 0.75
         let scrollFinishThreshold: CGFloat = 0.5
     }
     
     let pageNavigation = PageNavigation()
-    let folderCreateDwell: TimeInterval = 0
+    let folderCreateDwell: TimeInterval = LaunchNowConstants.Animation.folderCreateDwell
     
     var horizontalPadding: CGFloat { isFullscreen ? 0.05 : 0 }
     var topPadding: CGFloat { isFullscreen ? 0.05 : 0 }
