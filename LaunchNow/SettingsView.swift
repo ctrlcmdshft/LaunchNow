@@ -198,7 +198,7 @@ struct SettingsView: View {
                 try copyDirectory(from: sourceDir, to: destDir)
             }
         } catch {
-            LaunchNowLogger.log(.error, category: .general, message: "Failed to export data folder: \(error.localizedDescription)")
+            LaunchNowLogger.log(.error, category: LaunchNowLogger.general, message: "Failed to export data folder: \(error.localizedDescription)")
             // Show user-friendly error alert
             showErrorAlert(title: "Export Failed", message: "Unable to export LaunchNow data: \(error.localizedDescription)")
         }
