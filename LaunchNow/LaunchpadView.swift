@@ -1435,7 +1435,7 @@ extension LaunchpadView {
 
     // 统一的拖拽结束处理逻辑（普通拖拽与接力拖拽共用）
     private func finalizeDragOperation(containerSize: CGSize, columnWidth: CGFloat, appHeight: CGFloat, iconSize: CGFloat) {
-        guard draggingItem != nil else { return }
+        guard let dragging = draggingItem else { return }
         
         // Option 模式：如果没有成功创建/加入文件夹，则撤销放置并回弹
         if appStore.isOptionFolderMode {
@@ -1463,7 +1463,7 @@ extension LaunchpadView {
         }
         
         // 处理文件夹创建逻辑
-        if appStore.isDragCreatingFolder, case .app(let app) = dragging {
+        if appStore.isDragCreatingFolder, case .app(let app) = draggingItem {
             if let targetApp = appStore.folderCreationTarget {
                 if let insertAt = filteredItems.firstIndex(of: .app(targetApp)) {
                     let newFolder = appStore.createFolder(with: [app, targetApp], insertAt: insertAt)
