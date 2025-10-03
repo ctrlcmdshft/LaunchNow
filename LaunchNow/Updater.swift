@@ -2,7 +2,7 @@ import SwiftUI
 import Foundation
 import Combine
 
-struct GitHubRelease: Decodable, Sendable {
+struct GitHubRelease: Decodable {
     let tag_name: String
     let html_url: String
 }
