@@ -15,7 +15,7 @@ final class AppStore: ObservableObject {
     @Published var isStartOnLogin: Bool = false
     @Published var isFullscreenMode: Bool = false {
         didSet {
-            UserDefaults.standard.set(isFullscreenMode, forKey: "isFullscreenMode")
+            UserDefaults.standard.set(isFullscreenMode, forKey: LaunchNowConstants.UserDefaultsKeys.isFullscreenMode)
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 if let appDelegate = AppDelegate.shared {
@@ -28,13 +28,13 @@ final class AppStore: ObservableObject {
     
     @Published var scrollSensitivity: Double = 0.15 {
         didSet {
-            UserDefaults.standard.set(scrollSensitivity, forKey: "scrollSensitivity")
+            UserDefaults.standard.set(scrollSensitivity, forKey: LaunchNowConstants.UserDefaultsKeys.scrollSensitivity)
         }
     }
     
     @Published var showAppNameBelowIcon: Bool = true {
         didSet {
-            UserDefaults.standard.set(showAppNameBelowIcon, forKey: "showAppNameBelowIcon")
+            UserDefaults.standard.set(showAppNameBelowIcon, forKey: LaunchNowConstants.UserDefaultsKeys.showAppNameBelowIcon)
             // Only trigger refresh if actually changed
             if oldValue != showAppNameBelowIcon {
                 DispatchQueue.main.async { [weak self] in
@@ -83,25 +83,20 @@ final class AppStore: ObservableObject {
     private let fsEventsQueue = DispatchQueue(label: "app.store.fsevents")
     
     // 计算属性
-    private var itemsPerPage: Int { 35 }
+    private var itemsPerPage: Int { LaunchNowConstants.Layout.itemsPerPage }
     
 
 
-    private let applicationSearchPaths: [String] = [
-        "/Applications",
-        "\(NSHomeDirectory())/Applications",
-        "/System/Applications",
-        "/System/Cryptexes/App/System/Applications"
-    ]
+
 
     init() {
-        self.isFullscreenMode = UserDefaults.standard.bool(forKey: "isFullscreenMode")
-        self.scrollSensitivity = UserDefaults.standard.double(forKey: "scrollSensitivity")
+        self.isFullscreenMode = UserDefaults.standard.bool(forKey: LaunchNowConstants.UserDefaultsKeys.isFullscreenMode)
+        self.scrollSensitivity = UserDefaults.standard.double(forKey: LaunchNowConstants.UserDefaultsKeys.scrollSensitivity)
         // 如果没有保存过设置，使用默认值
         if self.scrollSensitivity == 0.0 {
             self.scrollSensitivity = 0.15
         }
-        self.showAppNameBelowIcon = UserDefaults.standard.object(forKey: "showAppNameBelowIcon") as? Bool ?? true
+        self.showAppNameBelowIcon = UserDefaults.standard.object(forKey: LaunchNowConstants.UserDefaultsKeys.showAppNameBelowIcon) as? Bool ?? true
     }
 
     func configure(modelContext: ModelContext) {
@@ -164,7 +159,7 @@ final class AppStore: ObservableObject {
             var found: [AppInfo] = []
             var seenPaths = Set<String>()
 
-            for path in self.applicationSearchPaths {
+            for path in LaunchNowConstants.Paths.applicationSearchPaths {
                 let url = URL(fileURLWithPath: path)
                 
                 if let enumerator = FileManager.default.enumerator(
@@ -214,7 +209,7 @@ final class AppStore: ObservableObject {
             let lock = NSLock()
             
             // 扫描所有应用
-            for path in self.applicationSearchPaths {
+            for path in LaunchNowConstants.Paths.applicationSearchPaths {
                 group.enter()
                 scanQueue.async {
                     let url = URL(fileURLWithPath: path)
@@ -672,7 +667,7 @@ final class AppStore: ObservableObject {
     func startAutoRescan() {
         guard fsEventStream == nil else { return }
 
-        let pathsToWatch: [String] = applicationSearchPaths
+        let pathsToWatch: [String] = LaunchNowConstants.Paths.applicationSearchPaths
         var context = FSEventStreamContext(
             version: 0,
             info: UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()),
@@ -743,7 +738,7 @@ final class AppStore: ObservableObject {
             let modified = (flags & FSEventStreamEventFlags(kFSEventStreamEventFlagItemModified)) != 0
             let isDir = (flags & FSEventStreamEventFlags(kFSEventStreamEventFlagItemIsDir)) != 0
 
-            if isDir && (created || removed || renamed), applicationSearchPaths.contains(where: { rawPath.hasPrefix($0) }) {
+            if isDir && (created || removed || renamed), LaunchNowConstants.Paths.applicationSearchPaths.contains(where: { rawPath.hasPrefix($0) }) {
                 localForceFull = true
                 break
             }

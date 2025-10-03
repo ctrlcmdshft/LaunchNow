@@ -2,11 +2,30 @@ import Foundation
 import AppKit
 import SwiftData
 
+// Cache class to handle icon caching for folders
+private class FolderIconCache {
+    private var cache: [CGFloat: NSImage] = [:]
+    
+    func getIcon(for size: CGFloat) -> NSImage? {
+        return cache[size]
+    }
+    
+    func setIcon(_ icon: NSImage, for size: CGFloat) {
+        cache[size] = icon
+    }
+    
+    func clearCache() {
+        cache.removeAll()
+    }
+}
+
 struct FolderInfo: Identifiable, Equatable {
     let id: String
     var name: String
     var apps: [AppInfo]
     let createdAt: Date
+    
+    private let iconCache = FolderIconCache()
     
     init(id: String = UUID().uuidString, name: String = NSLocalizedString("Untitled", comment: "Untitled"), apps: [AppInfo] = [], createdAt: Date = Date()) {
         self.id = id
@@ -14,8 +33,6 @@ struct FolderInfo: Identifiable, Equatable {
         self.apps = apps
         self.createdAt = createdAt
     }
-    
-    private var iconCache: [CGFloat: NSImage] = [:]
     
     var folderIcon: NSImage { 
         return icon(of: 72)
@@ -25,18 +42,18 @@ struct FolderInfo: Identifiable, Equatable {
         let normalizedSide = max(16, side)
         
         // Check cache first
-        if let cachedIcon = iconCache[normalizedSide] {
+        if let cachedIcon = iconCache.getIcon(for: normalizedSide) {
             return cachedIcon
         }
         
         let icon = renderFolderIcon(side: normalizedSide)
-        iconCache[normalizedSide] = icon
+        iconCache.setIcon(icon, for: normalizedSide)
         return icon
     }
     
     /// Clears the icon cache when folder contents change
-    mutating func clearIconCache() {
-        iconCache.removeAll()
+    func clearIconCache() {
+        iconCache.clearCache()
     }
 
     private func renderFolderIcon(side: CGFloat) -> NSImage {
@@ -84,7 +101,10 @@ struct FolderInfo: Identifiable, Equatable {
     }
     
     static func == (lhs: FolderInfo, rhs: FolderInfo) -> Bool {
-        lhs.id == rhs.id
+        return lhs.id == rhs.id && 
+               lhs.name == rhs.name && 
+               lhs.apps == rhs.apps && 
+               lhs.createdAt == rhs.createdAt
     }
 }
 

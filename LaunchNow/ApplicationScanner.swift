@@ -5,12 +5,7 @@ import AppKit
 final class ApplicationScanner {
     static let shared = ApplicationScanner()
     
-    private let applicationSearchPaths: [String] = [
-        "/Applications",
-        "\(NSHomeDirectory())/Applications",
-        "/System/Applications",
-        "/System/Cryptexes/App/System/Applications"
-    ]
+    private let applicationSearchPaths: [String] = LaunchNowConstants.Paths.applicationSearchPaths
     
     private init() {}
     
