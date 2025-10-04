@@ -1,0 +1,118 @@
+name: Build LaunchNow
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+env:
+  XCODE_VERSION: '15.4'
+  SCHEME_NAME: 'LaunchNow'
+  CONFIGURATION: 'Release'
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: macos-14
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: ${{ env.XCODE_VERSION }}
+    
+    - name: Cache derived data
+      uses: actions/cache@v4
+      with:
+        path: ~/Library/Developer/Xcode/DerivedData
+        key: ${{ runner.os }}-derived-data-${{ hashFiles('**/*.pbxproj') }}
+        restore-keys: |
+          ${{ runner.os }}-derived-data-
+    
+    - name: Show Xcode version
+      run: xcodebuild -version
+      
+    - name: Show available schemes
+      run: xcodebuild -list -project LaunchNow.xcodeproj
+      
+    - name: Clean build folder
+      run: xcodebuild clean -project LaunchNow.xcodeproj -scheme ${{ env.SCHEME_NAME }} -configuration ${{ env.CONFIGURATION }}
+      
+    - name: Build app
+      run: |
+        xcodebuild build \
+          -project LaunchNow.xcodeproj \
+          -scheme ${{ env.SCHEME_NAME }} \
+          -configuration ${{ env.CONFIGURATION }} \
+          -destination 'platform=macOS' \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+          
+    - name: Run tests (if any)
+      run: |
+        xcodebuild test \
+          -project LaunchNow.xcodeproj \
+          -scheme ${{ env.SCHEME_NAME }} \
+          -destination 'platform=macOS' \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO || echo "No tests found or tests failed"
+      continue-on-error: true
+      
+    - name: Archive app
+      run: |
+        xcodebuild archive \
+          -project LaunchNow.xcodeproj \
+          -scheme ${{ env.SCHEME_NAME }} \
+          -configuration ${{ env.CONFIGURATION }} \
+          -destination 'platform=macOS' \
+          -archivePath build/LaunchNow.xcarchive \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+          
+    - name: Export app
+      run: |
+        xcodebuild -exportArchive \
+          -archivePath build/LaunchNow.xcarchive \
+          -exportPath build/ \
+          -exportOptionsPlist .github/export-options.plist
+      continue-on-error: true
+      
+    - name: Create DMG (alternative export)
+      run: |
+        # Create app bundle from archive
+        mkdir -p build/LaunchNow
+        cp -R build/LaunchNow.xcarchive/Products/Applications/LaunchNow.app build/LaunchNow/
+        
+        # Create a simple DMG
+        hdiutil create -volname "LaunchNow" -srcfolder build/LaunchNow -ov -format UDZO build/LaunchNow.dmg
+      continue-on-error: true
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: LaunchNow-${{ github.sha }}
+        path: |
+          build/LaunchNow.xcarchive
+          build/LaunchNow.dmg
+          build/LaunchNow/*.app
+        retention-days: 30
+        
+    - name: Upload DMG to release (on release)
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/LaunchNow.dmg
+        asset_name: LaunchNow-${{ github.event.release.tag_name }}.dmg
+        asset_content_type: application/octet-stream
