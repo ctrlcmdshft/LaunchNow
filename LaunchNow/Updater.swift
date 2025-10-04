@@ -21,29 +21,31 @@ class Updater: ObservableObject {
     func checkForUpdate() {
         guard let url = URL(string: "https://api.github.com/repos/\(owner)/\(repo)/releases/latest") else { return }
         
-        URLSession.shared.dataTask(with: url) { data, _, _ in
-            guard let data = data,
-                  let release = try? JSONDecoder().decode(GitHubRelease.self, from: data) else {
-                return
-            }
-            
-            let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
-            
-            DispatchQueue.main.async {
-                if self.isVersion(release.tag_name, greaterThan: currentVersion) {
-                    // 有新版本
-                    self.alertTitle = NSLocalizedString("FoundNewVersion", comment: "Found New Version: ") + "\(release.tag_name)"
-                    self.alertMessage = NSLocalizedString("GoToGithub", comment: "Go to Github to download the latest version")
-                    self.alertURL = URL(string: release.html_url)
-                } else {
-                    // 已是最新版
-                    self.alertTitle = NSLocalizedString("AlreadyLatest", comment: "Already the latest version: ") + "v\(currentVersion)"
-                    self.alertMessage = NSLocalizedString("Enjoy", comment: "Enjoy")
-                    self.alertURL = nil
+        Task {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                let release = try JSONDecoder().decode(GitHubRelease.self, from: data)
+                
+                let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
+                
+                await MainActor.run {
+                    if self.isVersion(release.tag_name, greaterThan: currentVersion) {
+                        // 有新版本
+                        self.alertTitle = NSLocalizedString("FoundNewVersion", comment: "Found New Version: ") + "\(release.tag_name)"
+                        self.alertMessage = NSLocalizedString("GoToGithub", comment: "Go to Github to download the latest version")
+                        self.alertURL = URL(string: release.html_url)
+                    } else {
+                        // 已是最新版
+                        self.alertTitle = NSLocalizedString("AlreadyLatest", comment: "Already the latest version: ") + "v\(currentVersion)"
+                        self.alertMessage = NSLocalizedString("Enjoy", comment: "Enjoy")
+                        self.alertURL = nil
+                    }
+                    self.showAlert = true
                 }
-                self.showAlert = true
+            } catch {
+                // Handle error silently or log if needed
             }
-        }.resume()
+        }
     }
     
     /// 从左到右比较版本号

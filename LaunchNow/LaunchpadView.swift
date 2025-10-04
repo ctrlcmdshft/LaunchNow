@@ -650,7 +650,7 @@ struct LaunchpadView: View {
     }
 
     private func finalizeHandoffDrag() {
-        guard let dragging = draggingItem else { return }
+        guard draggingItem != nil else { return }
         defer {
             if let monitor = handoffEventMonitor { NSEvent.removeMonitor(monitor); handoffEventMonitor = nil }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
