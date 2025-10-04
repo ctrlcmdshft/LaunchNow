@@ -9,14 +9,14 @@ on:
     types: [ published ]
 
 env:
-  XCODE_VERSION: '15.4'
+  XCODE_VERSION: '16.0'
   SCHEME_NAME: 'LaunchNow'
   CONFIGURATION: 'Release'
 
 jobs:
   build:
     name: Build and Test
-    runs-on: macos-14
+    runs-on: macos-15
     
     steps:
     - name: Checkout code
@@ -26,6 +26,15 @@ jobs:
       uses: maxim-lobanov/setup-xcode@v1
       with:
         xcode-version: ${{ env.XCODE_VERSION }}
+      continue-on-error: true
+      
+    - name: Fallback to latest Xcode if version not available
+      run: |
+        if ! xcode-select -p; then
+          echo "Setting up latest available Xcode"
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+        fi
+        xcodebuild -version
     
     - name: Cache derived data
       uses: actions/cache@v4
@@ -38,8 +47,22 @@ jobs:
     - name: Show Xcode version
       run: xcodebuild -version
       
+    - name: Check Xcode project compatibility
+      run: |
+        echo "Checking Xcode project format compatibility..."
+        if xcodebuild -list -project LaunchNow.xcodeproj; then
+          echo "✅ Project format is compatible"
+        else
+          echo "❌ Project format incompatibility detected"
+          echo "Available Xcode versions:"
+          ls /Applications/ | grep -i xcode || echo "No Xcode installations found in /Applications"
+          echo "Current Xcode version:"
+          xcodebuild -version
+          echo "Attempting to continue with available Xcode..."
+        fi
+      
     - name: Show available schemes
-      run: xcodebuild -list -project LaunchNow.xcodeproj
+      run: xcodebuild -list -project LaunchNow.xcodeproj || echo "Could not list schemes due to project format"
       
     - name: Clean build folder
       run: xcodebuild clean -project LaunchNow.xcodeproj -scheme ${{ env.SCHEME_NAME }} -configuration ${{ env.CONFIGURATION }}

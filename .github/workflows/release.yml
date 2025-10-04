@@ -6,14 +6,14 @@ on:
       - 'v*'  # Triggers on version tags like v1.0.0
 
 env:
-  XCODE_VERSION: '15.4'
+  XCODE_VERSION: '16.0'
   SCHEME_NAME: 'LaunchNow'
   CONFIGURATION: 'Release'
 
 jobs:
   release:
     name: Create Release Build
-    runs-on: macos-14
+    runs-on: macos-15
     
     steps:
     - name: Checkout code

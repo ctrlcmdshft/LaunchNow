@@ -113,16 +113,65 @@ runs-on: macos-14  # or macos-13, macos-latest
 - Release assets are permanent
 - Download links are available in releases
 
+## Xcode Version Compatibility
+
+### Current Issue
+Your LaunchNow project uses Xcode project format 77, which requires Xcode 16.0 or later. GitHub Actions may not always have the latest Xcode versions available immediately.
+
+### Solutions
+
+#### Option 1: Use Adaptive Build Workflow
+The `build-adaptive.yml` workflow automatically detects and uses the newest available Xcode version:
+
+```yaml
+# Uses the latest available Xcode automatically
+runs-on: macos-latest
+```
+
+#### Option 2: Downgrade Project Format (Recommended)
+1. Open your project in Xcode
+2. Go to Project Settings → Project Format
+3. Change to "Xcode 15.0-compatible" or earlier
+4. This maintains compatibility with GitHub Actions
+
+#### Option 3: Use Xcode Cloud
+Apple's Xcode Cloud always has the latest Xcode versions:
+1. Set up Xcode Cloud in App Store Connect
+2. Configure build workflows there
+3. More suitable for cutting-edge Xcode features
+
+### Workflow Files
+
+- `build.yml` - Standard build (requires Xcode 16.0+)
+- `build-adaptive.yml` - Adaptive build (works with available Xcode)
+- `release.yml` - Release automation
+- `lint.yml` - Code quality checks
+
 ## Troubleshooting
 
 ### Common Issues
-1. **Scheme not found**: Update `SCHEME_NAME` in workflows
-2. **Build failures**: Check Xcode version compatibility
-3. **Code signing**: May need to disable for CI builds
-4. **Missing dependencies**: Ensure all Swift packages are properly configured
+1. **Project format incompatibility**: 
+   ```
+   error: Unable to read project 'LaunchNow.xcodeproj'
+   Reason: The project is in a future Xcode project file format (77)
+   ```
+   **Solution**: Use `build-adaptive.yml` or downgrade project format
+
+2. **Scheme not found**: Update `SCHEME_NAME` in workflows
+3. **Build failures**: Check Xcode version compatibility
+4. **Code signing**: May need to disable for CI builds
+5. **Missing dependencies**: Ensure all Swift packages are properly configured
 
 ### Debug Steps
 1. Check workflow logs in Actions tab
-2. Verify Xcode project settings
-3. Test build locally first
-4. Check for any missing files or dependencies
+2. Look for Xcode version compatibility messages
+3. Verify Xcode project settings locally
+4. Test build with `xcodebuild` command locally
+5. Consider using the adaptive build workflow
+
+### Xcode Version Matrix
+| Project Format | Required Xcode | GitHub Actions Support |
+|---------------|----------------|----------------------|
+| Format 76     | Xcode 15.0+   | ✅ Supported        |
+| Format 77     | Xcode 16.0+   | ⚠️ Limited          |
+| Format 78+    | Xcode 16.1+   | ❌ Not yet          |
